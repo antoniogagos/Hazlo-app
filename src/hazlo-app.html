@@ -1,0 +1,67 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+
+<dom-module id="hazlo-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+
+        display: block;
+      }
+    </style>
+
+    <firebase-app
+        auth-domain="hazlo-app-c809c.firebaseapp.com"
+        api-key="AIzaSyD2fh7ZslNj4ZBrLTSwf7znhhzZ0EqgkZE"
+        database-url="https://hazlo-app-c809c.firebaseio.com/"></firebase-app>
+
+    <firebase-auth
+        id="auth"
+        user="{{user}}"
+        provider="google"
+        on-error="_handleError"></firebase-auth>
+
+    <div>[[user]]</div>
+    <button on-click="_signIn">Sign in</button>
+
+  </template>
+  <script>
+
+    class HazloApp extends Polymer.Element {
+
+      static get is() { return 'hazlo-app'; }
+
+      static get properties() {
+        return {
+
+          user: {
+            type: Object
+          }
+
+        };
+      }
+
+      _signIn() {
+        this.$.auth.signInWithPopup()
+          .then(function(response) {
+            console.log('response', response);
+            // optionally handle a successful login
+          })
+          .catch(function(error) {
+            console.log('error', error);
+            // unsuccessful authentication response here
+          });
+      }
+
+      _handleError(error) {
+        console.warn('error', error);
+      }
+
+    }
+
+    window.customElements.define(HazloApp.is, HazloApp);
+  </script>
+</dom-module>

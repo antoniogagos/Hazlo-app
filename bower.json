@@ -1,0 +1,15 @@
+{
+  "name": "hazlo",
+  "description": "todo app",
+  "main": "index.html",
+  "authors": [
+    "Antonio Garcia"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0-rc.3",
+    "polymerfire": "firebase/polymerfire#2.0-preview"
+  }
+}

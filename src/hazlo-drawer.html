@@ -1,0 +1,138 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+
+<dom-module id="hazlo-drawer">
+  <template>
+    <style>
+      app-drawer {
+        z-index: 1;
+      }
+
+      .user {
+        align-items: center;
+        display: flex;
+        padding: 40px 20px 20px;
+      }
+
+      .user__img {
+        border-radius: 50%;
+        height: 48px;
+        margin-right: 12px;
+        width: 48px;
+      }
+
+      .user__name {
+        font-weight: bold;
+      }
+
+      .user__tasks {
+        font-size: 13px;
+        color: #999;
+      }
+
+      iron-selector {
+        display: block;
+        font-size: 14px;
+        user-select: none;
+        margin: 10px 0;
+      }
+
+      iron-selector > div {
+        cursor: pointer;
+        padding: 10px 20px;
+      }
+
+      iron-selector > div:hover {
+        background: #f2f2f2;
+      }
+
+      iron-selector > div iron-icon {
+        margin-right: 10px;
+      }
+
+      .iron-selected {
+        color: var(--app-primary-color);
+        background: #f2f2f2;
+      }
+    </style>
+
+    <app-drawer opened="{{opened}}" swipe-open>
+      <div class="user">
+        <img class="user__img" src="[[user.photoURL]]" alt="User image">
+
+        <div>
+          <div class="user__name">[[user.displayName]]</div>
+          <div class="user__tasks">13 tasks</div>
+        </div>
+      </div>
+
+      <iron-selector selected="{{selectedTab}}" attr-for-selected="name">
+        <div name="today">
+          <iron-icon icon="calendar-today"></iron-icon>
+          Today
+        </div>
+
+        <div name="inbox">
+          <iron-icon icon="inbox"></iron-icon>
+          Inbox
+        </div>
+
+        <div name="projects">
+          <iron-icon icon="folder"></iron-icon>
+          Projects
+        </div>
+
+        <div name="settings">
+          <iron-icon icon="settings"></iron-icon>
+          Settings
+        </div>
+
+        <div name="logout">
+          <iron-icon icon="logout"></iron-icon>
+          Logout
+        </div>
+      </iron-selector>
+    </app-drawer>
+
+  </template>
+  <script>
+
+    class HazloDrawer extends Polymer.Element {
+
+      static get is() { return 'hazlo-drawer'; }
+
+      static get properties() {
+        return {
+
+          user: Object,
+
+          opened: {
+            type: Boolean
+          },
+
+          selectedTab: {
+            type: String,
+            observer: '_selectedTabChanged'
+          }
+
+        };
+      }
+
+      _selectedTabChanged(selectedTab) {
+        if (selectedTab === 'logout') {
+          this.dispatchEvent(new CustomEvent('logout', {
+            bubbles: true,
+            composed: true
+          }));
+
+          this.opened = false;
+          this.selectedTab = null;
+        }
+      }
+
+    }
+
+    customElements.define(HazloDrawer.is, HazloDrawer);
+  </script>
+</dom-module>

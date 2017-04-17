@@ -1,15 +1,26 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+
+<link rel="import" href="hazlo-welcome-page.html">
+<link rel="import" href="hazlo-drawer.html">
+<link rel="import" href="hazlo-dashboard-page.html">
+<link rel="import" href="hazlo-addtask-page.html">
 
 <dom-module id="hazlo-app">
   <template>
     <style>
       :host {
-        --app-primary-color: #4285f4;
+        --app-primary-color: #009eeb;
         --app-secondary-color: black;
 
         display: block;
+        height: 100%;
+      }
+
+      iron-pages {
+        height: 100%;
       }
     </style>
 
@@ -24,8 +35,18 @@
         provider="google"
         on-error="_handleError"></firebase-auth>
 
-    <div>[[user]]</div>
-    <button on-click="_signIn">Sign in</button>
+    <hazlo-drawer id="drawer" user="[[user]]"></hazlo-drawer>
+
+    <iron-pages selected="[[page]]" attr-for-selected="name"> <!-- [[page]] -->
+      <!-- no login required -->
+      <hazlo-welcome-page name="welcome" user="{{user}}"></hazlo-welcome-page>
+      <hazlo-signin-page name="signin"></hazlo-signin-page>
+      <hazlo-signup-page name="signup"></hazlo-signup-page>
+
+      <!-- login required -->
+      <hazlo-dashboard-page name="dashboard"></hazlo-dashboard-page>
+      <hazlo-addtask-page name="addtask"></hazlo-addtask-page>
+    </iron-pages>
 
   </template>
   <script>
@@ -38,16 +59,56 @@
         return {
 
           user: {
-            type: Object
-          }
+            type: Object,
+            observer: '_userChanged'
+          },
+
+          page: String
 
         };
       }
 
-      _signIn() {
+      connectedCallback() {
+        super.connectedCallback();
+
+        document.body.addEventListener('open-drawer', _ => {
+          this.$.drawer.opened = true;
+        });
+
+        document.body.addEventListener('add-task', _ => {
+          this.page = 'dashboard';
+        });
+
+        document.body.addEventListener('addtask-page', _ => {
+          this.page = 'addtask';
+        })
+
+        document.body.addEventListener('go-back', _ => {
+          this.page = 'dashboard';
+        })
+
+        document.body.addEventListener('signin', event => {
+          if (event.detail.provider === 'google') {
+            this._signInWithGoogle();
+          }
+        });
+
+        document.body.addEventListener('logout', _ => {
+          this.$.auth.signOut();
+        });
+      }
+
+      _userChanged(user) {
+        if (user) {
+          this.page = 'dashboard';
+        } else {
+          this.page = 'welcome';
+        }
+      }
+
+      _signInWithGoogle() {
         this.$.auth.signInWithPopup()
           .then(function(response) {
-            console.log('response', response);
             // optionally handle a successful login
           })
           .catch(function(error) {
@@ -56,12 +117,8 @@
           });
       }
 
-      _handleError(error) {
-        console.warn('error', error);
-      }
-
     }
 
-    window.customElements.define(HazloApp.is, HazloApp);
+    customElements.define(HazloApp.is, HazloApp);
   </script>
 </dom-module>

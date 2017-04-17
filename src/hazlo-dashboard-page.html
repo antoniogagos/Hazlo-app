@@ -1,0 +1,130 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="icons.html">
+
+<dom-module id="hazlo-dashboard-page">
+  <template>
+    <style include="toolbar-styles btn-styles">
+
+      :host {
+        display: block;
+        height: 100%;
+      }
+
+      iron-icon[icon="bell-outline"] {
+        margin-left: auto;
+      }
+
+      .subheader {
+        align-items: center;
+        border-bottom: 2px solid #eee;
+        display: flex;
+        padding: 10px 20px;
+      }
+
+      #weather-icon {
+        display: flex;
+        height: 200px;
+        margin: 0 auto;
+        width: 200px;
+      }
+
+      .empty-dashboard {
+        margin-top: 125px;
+      }
+
+    </style>
+
+    <div class="toolbar">
+      <iron-icon icon="menu" on-click="_menuTapped"></iron-icon>
+      <div class="toolbar__title">Hazlo</div>
+      <iron-icon icon="bell-outline"></iron-icon>
+      <iron-icon icon="plus-circle-outline"></iron-icon>
+    </div>
+
+    <div class="content">
+
+      <div class="subheader">
+        <p style="color: #757575; margin-left: 20px; margin-right: auto;">Today</p>
+        <div style="padding: 4px 10px; background-color: #50c6ff;color: white; border-radius: 100%; box-shadow: 0px 0px 3px 0px #50c6ff">[[taskCounter]]</div>
+      </div>
+
+      <dom-repeat id="tasks">
+        <template>
+          <div>{{item.taskText}}</div>
+          <div>{{item.project}}</div>
+          <div>{{item.date}}</div>
+        </template>
+      </dom-repeat>
+
+    </div>
+
+    <div class="empty-dashboard">
+      <iron-icon id="weather-icon" icon="weather"></iron-icon>
+      <p style="text-align:center; color: #757575;">No Task for Today. Enjoy!</p>
+      <button on-click="_add_btn" class="btn" style="margin-top: 100px;">add task</button>
+    </div>
+
+
+  </template>
+  <script>
+
+  class HazloDashboardPage extends Polymer.Element {
+
+    static get is() {return 'hazlo-dashboard-page';}
+
+    static get properties() {
+      return {
+        taskCounter: {
+          type: Number,
+          value: 0,
+          observer: '_taskAdded'
+        },
+
+        tasks: {
+          type: Array,
+          value() {
+            return [];
+          },
+        }
+      };
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+
+      var taskList = this.$.tasks;
+      taskList.items = this.tasks;
+
+      document.body.addEventListener('add-task', e => {
+        var task = e.detail.task;
+        this.set('tasks', {taskText: task.taskText, project: task.project, date: task.date});
+
+        this.notifyPath('tasks');
+
+        console.table(this.tasks);
+      });
+    }
+
+    _add_btn() {
+      this.dispatchEvent(new CustomEvent('addtask-page', {
+        bubbles: true,
+        composed: true
+      }));
+    }
+
+    _taskAdded() {}
+
+    _menuTapped() {
+      this.dispatchEvent(new CustomEvent('open-drawer', {
+        bubbles: true,
+        composed: true
+      }));
+    }
+
+  }
+
+  customElements.define(HazloDashboardPage.is, HazloDashboardPage);
+
+  </script>
+</dom-module>

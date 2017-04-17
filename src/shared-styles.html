@@ -1,0 +1,82 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="toolbar-styles">
+  <template>
+    <style>
+
+      .toolbar {
+        align-items: center;
+        background: var(--app-primary-color);
+        box-sizing: border-box;
+        color: white;
+        display: flex;
+        height: 44px;
+        left: 0;
+        padding: 0 16px;
+        position: fixed;
+        top: 0;
+        width: 100%;
+      }
+
+      .content {
+        margin-top: 44px;
+      }
+
+      .toolbar__title {
+        left: 0;
+        margin: 0 auto;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        text-align: center;
+      }
+
+      .toolbar > iron-icon {
+        border-radius: 50%;
+        cursor: pointer;
+        padding: 6px;
+      }
+
+      .toolbar > iron-icon:hover {
+        background: rgba(255,255,255,0.10);
+      }
+
+    </style>
+  </template>
+</dom-module>
+
+<dom-module id="btn-styles">
+  <template>
+    <style>
+
+      .btn {
+        background: var(--app-primary-color);
+        border-radius: 3px;
+        border: 0;
+        color: white;
+        cursor: pointer;
+        font-family: sans-serif;
+        font-size: 13px;
+        font-weight: lighter;
+        letter-spacing: 2px;
+        outline: 0;
+        padding: 12px 14px;
+        width: 100%;
+        display: block;
+        text-transform: uppercase;
+      }
+
+      .btn:hover {
+        box-shadow: inset 0 -2px 0 rgba(31,45,61,.15);
+      }
+
+      @media(min-width: 720px) {
+        .btn {
+          margin: auto;
+          width: auto;
+        }
+      }
+
+    </style>
+  </template>
+</dom-module>

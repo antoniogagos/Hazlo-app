@@ -9,6 +9,10 @@
   "homepage": "",
   "private": true,
   "dependencies": {
+    "app-layout": "PolymerElements/app-layout#2.0-preview",
+    "iron-icon": "PolymerElements/iron-icon#2.0-preview",
+    "iron-iconset-svg": "PolymerElements/iron-iconset-svg#2.0-preview",
+    "iron-pages": "PolymerElements/iron-pages#2.0-preview",
     "polymer": "Polymer/polymer#^2.0.0-rc.3",
     "polymerfire": "firebase/polymerfire#2.0-preview"
   }

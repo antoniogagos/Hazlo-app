@@ -33,38 +33,85 @@
         margin-top: 125px;
       }
 
+      .task {
+        border-bottom: 2px solid #eee;
+        padding: 30px;
+      }
+
+      .task__name {
+        font-size: 28px;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+      }
+
+      .task__date {
+        font-size: 14px;
+        color: #cecece;
+      }
+
+      .task__project {
+        color: #cecece;
+      }
+
+      .task .btn {
+        margin: 0;
+        margin-top: 20px;
+      }
+
+      .task-counter {
+        background-color: #50c6ff;
+        border-radius: 100%;
+        box-shadow: 0px 0px 3px 0px #50c6ff;
+        color: white;
+        padding: 4px 10px;
+      }
+
+      .undone {
+        background-color: #e64040;
+        box-shadow: 0px 0px 6px 0px #c72525;
+      }
+
     </style>
 
     <div class="toolbar">
       <iron-icon icon="menu" on-click="_menuTapped"></iron-icon>
       <div class="toolbar__title">Hazlo</div>
       <iron-icon icon="bell-outline"></iron-icon>
-      <iron-icon icon="plus-circle-outline"></iron-icon>
+      <iron-icon onclick="openAnimatedOverlay()" icon="plus-circle-outline"></iron-icon>
     </div>
 
     <div class="content">
 
       <div class="subheader">
-        <p style="color: #757575; margin-left: 20px; margin-right: auto;">Today</p>
-        <div style="padding: 4px 10px; background-color: #50c6ff;color: white; border-radius: 100%; box-shadow: 0px 0px 3px 0px #50c6ff">[[taskCounter]]</div>
+        <p style="color: #757575; margin-left: 10px; margin-right: auto;">Today</p>
+        <div class="task-counter">[[taskCounter]]</div>
       </div>
 
-      <dom-repeat id="tasks">
-        <template>
-          <div>{{item.taskText}}</div>
-          <div>{{item.project}}</div>
-          <div>{{item.date}}</div>
-        </template>
-      </dom-repeat>
+      <div id="tasks">
+        <dom-repeat  items="{{tasks}}">
+          <template>
+            <div class="task">
+
+              <div class="task__date">{{item.date}}</div>
+              <div class="task__name">{{item.taskName}}</div>
+              <div class="task__project">{{item.project}}</div>
+
+              <button on-click="_deleteTask" class="btn">delete</button>
+            </div>
+          </template>
+        </dom-repeat>
+      </div>
 
     </div>
 
     <div class="empty-dashboard">
       <iron-icon id="weather-icon" icon="weather"></iron-icon>
       <p style="text-align:center; color: #757575;">No Task for Today. Enjoy!</p>
-      <button on-click="_add_btn" class="btn" style="margin-top: 100px;">add task</button>
+
+      <button class="btn" onclick="openAnimatedOverlay()"  style="margin-top: 100px;">add task</button>
     </div>
 
+    <overlay-container></overlay-container>
 
   </template>
   <script>
@@ -75,45 +122,57 @@
 
     static get properties() {
       return {
+
         taskCounter: {
           type: Number,
-          value: 0,
-          observer: '_taskAdded'
+          value: 0
         },
 
         tasks: {
           type: Array,
-          value() {
+          value: _ => {
             return [];
-          },
+          }
         }
+
       };
+    }
+
+    static get observers() {
+      return [
+        '_task(tasks.length)'
+      ]
+    }
+
+    _deleteTask(e) {
+      var taskIndex = e.model.__data.index;
+
+      this.splice('tasks', taskIndex, 1);
+    }
+
+    _task(counter) {
+      var empty_dashboard = this.shadowRoot.querySelector('.empty-dashboard');
+      var taskCounter = this.shadowRoot.querySelector('.task-counter');
+
+      if ( counter == 0 ) {
+        empty_dashboard.style.display = 'block';
+        taskCounter.classList.remove('undone');
+      } else {
+        empty_dashboard.style.display = 'none';
+        taskCounter.classList.add('undone');
+      }
+
+      this.taskCounter = counter;
     }
 
     connectedCallback() {
       super.connectedCallback();
 
-      var taskList = this.$.tasks;
-      taskList.items = this.tasks;
-
       document.body.addEventListener('add-task', e => {
-        var task = e.detail.task;
-        this.set('tasks', {taskText: task.taskText, project: task.project, date: task.date});
-
-        this.notifyPath('tasks');
-
-        console.table(this.tasks);
+       this.push('tasks', e.detail);
+       this.set('tasks.counter', this.tasks.length);
       });
     }
-
-    _add_btn() {
-      this.dispatchEvent(new CustomEvent('addtask-page', {
-        bubbles: true,
-        composed: true
-      }));
-    }
-
-    _taskAdded() {}
 
     _menuTapped() {
       this.dispatchEvent(new CustomEvent('open-drawer', {
@@ -123,6 +182,11 @@
     }
 
   }
+
+  function openAnimatedOverlay() {
+    window.overlay = document.createElement('addtask-overlay');
+    overlay.open();
+   }
 
   customElements.define(HazloDashboardPage.is, HazloDashboardPage);
 

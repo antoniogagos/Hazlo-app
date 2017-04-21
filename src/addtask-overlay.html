@@ -1,0 +1,198 @@
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/overlay-container/animated-overlay-mixin.html">
+
+<link rel="import" href="icons.html">
+
+
+<dom-module id="addtask-overlay">
+  <template>
+    <style include="toolbar-styles btn-styles">
+      :host {
+        background: #fff;
+        bottom: 0;
+        display: block;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      :host(:focus) {
+        border: 2px solid dodgerblue;
+      }
+
+      .content {
+        padding: 30px;
+        margin: 20px;
+        margin-top: 30px;
+      }
+
+      .task-name-box {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .input-taskName {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #eee;
+        font-size: 20px;
+      }
+
+      .input-taskName:focus {
+        outline: none;
+      }
+
+      .project-box {
+        margin-top: 40px;
+        width: 100%;
+        margin-bottom: 40px;
+      }
+
+      .project-selector {
+        background-color: inherit;
+        border: none;
+        font-size: 18px;
+        margin-left: 5px;
+        margin-top: 20px;
+        outline: 0;
+        width: 100%;
+      }
+
+      #dates {
+        display: flex;
+        padding: 10px;
+        text-align: center;
+        justify-content: space-between;
+      }
+
+      iron-selector iron-icon {
+        width: 45px;
+        height: 45px;
+        padding: 5px;
+      }
+
+      iron-selector {
+        display: flex;
+      }
+
+      #dates div {
+        --iron-icon-fill-color: #e4e4e4;
+        color: #e4e4e4;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 5px;
+      }
+
+      .iron-selected {
+        --iron-icon-fill-color: #009eeb !important;
+      }
+
+      .iron-selected .text-date {
+        color: black !important;
+      }
+
+    </style>
+
+    <div class="toolbar">
+      <div class="toolbar__title">Add Task</div>
+      <iron-icon on-click="_closeOverlay" icon="arrow-back"></iron-icon>
+    </div>
+
+    <div class="content">
+
+      <div class="task-name-box">
+        <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;" for="nameInput">Task Name</label>
+        <input class="input-taskName" type="text">
+      </div>
+
+      <div class="project-box">
+        <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;">Project</label>
+         <div style="display: flex;">
+          <div style="width: 8px; height: 8px; background-color: red; margin-top: 27px; margin-left: 5px; "></div>
+
+          <select class="project-selector">
+            <option value="business">Business</option>
+            <option value="home">Home</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="date-box">
+        <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;">Date</label>
+
+        <div id="dates">
+          <iron-selector attr-for-selected="name" selected="Today">
+
+            <div name="Today">
+              <iron-icon icon="today"></iron-icon>
+              <div class="text-date">Today</div>
+            </div>
+
+            <div name="Tomorrow">
+              <iron-icon icon="tomorrow"></iron-icon>
+              <div class="text-date">Tomorrow</div>
+            </div>
+
+            <div name="Next Week">
+              <iron-icon icon="week"></iron-icon>
+              <div class="text-date">Next Week</div>
+            </div>
+
+            <div name="Custom">
+              <iron-icon icon="edit"></iron-icon>
+              <div class="text-date">Custom</div>
+            </div>
+
+          </iron-selector>
+        </div>
+
+      </div>
+
+      <button class="btn" on-click="_addTask" style="margin-top: 100px;">save</button>
+    </div>
+
+  </template>
+
+  <script>
+
+    class AddTaskOverlay extends AnimatedOverlayMixin(Polymer.Element) {
+
+      static get is() {return 'addtask-overlay';}
+
+      _closeOverlay() {
+        overlay.opened = false;
+      }
+
+      _addTask() {
+        var taskName = this.shadowRoot.querySelector('.input-taskName').value;
+        var project = this.shadowRoot.querySelector('.project-selector').value;
+
+        if (taskName != '') {
+          var date = this.shadowRoot.querySelector('iron-selector').selected;
+
+          this.dispatchEvent(new CustomEvent('add-task', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              "taskName": taskName,
+              "project": project,
+              "date": date
+            }
+          }));
+
+          this._closeOverlay();
+        } else {
+          console.log("Please name the task");
+        }
+
+      }
+    }
+
+    customElements.define(AddTaskOverlay.is, AddTaskOverlay);
+
+  </script>
+</dom-module>

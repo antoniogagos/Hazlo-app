@@ -74,24 +74,16 @@
       }
 
       iron-selector {
-        display: flex;
-      }
-
-      #dates div {
         --iron-icon-fill-color: #e4e4e4;
         color: #e4e4e4;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin: 5px;
       }
 
       .iron-selected {
-        --iron-icon-fill-color: #009eeb !important;
+        --iron-icon-fill-color: #009eeb;
       }
 
       .iron-selected .text-date {
-        color: black !important;
+        color: black;
       }
 
     </style>
@@ -105,13 +97,13 @@
 
       <div class="task-name-box">
         <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;" for="nameInput">Task Name</label>
-        <input class="input-taskName" type="text">
+        <input id="taskName" class="input-taskName" type="text">
       </div>
 
       <div class="project-box">
         <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;">Project</label>
          <div style="display: flex;">
-          <div style="width: 8px; height: 8px; background-color: red; margin-top: 27px; margin-left: 5px; "></div>
+          <div style="width: 8px; height: 8px; background-color: red; margin-top: 27px; margin-left: 5px;"></div>
 
           <select class="project-selector">
             <option value="business">Business</option>
@@ -124,7 +116,6 @@
       <div class="date-box">
         <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;">Date</label>
 
-        <div id="dates">
           <iron-selector attr-for-selected="name" selected="Today">
 
             <div name="Today">
@@ -148,7 +139,6 @@
             </div>
 
           </iron-selector>
-        </div>
 
       </div>
 
@@ -171,7 +161,7 @@
         var taskName = this.shadowRoot.querySelector('.input-taskName').value;
         var project = this.shadowRoot.querySelector('.project-selector').value;
 
-        if (taskName != '') {
+        if (taskName !== '') {
           var date = this.shadowRoot.querySelector('iron-selector').selected;
 
           this.dispatchEvent(new CustomEvent('add-task', {

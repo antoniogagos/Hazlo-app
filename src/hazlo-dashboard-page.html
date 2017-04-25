@@ -77,7 +77,7 @@
       <iron-icon icon="menu" on-click="_menuTapped"></iron-icon>
       <div class="toolbar__title">Hazlo</div>
       <iron-icon icon="bell-outline"></iron-icon>
-      <iron-icon onclick="openAnimatedOverlay()" icon="plus-circle-outline"></iron-icon>
+      <iron-icon on-click="_openAnimatedOverlay" icon="plus-circle-outline"></iron-icon>
     </div>
 
     <div class="content">
@@ -104,11 +104,11 @@
 
     </div>
 
-    <div class="empty-dashboard">
+    <div class="empty-dashboard" hidden$="_computeEmptyDashVisible()">
       <iron-icon id="weather-icon" icon="weather"></iron-icon>
       <p style="text-align:center; color: #757575;">No Task for Today. Enjoy!</p>
 
-      <button class="btn" onclick="openAnimatedOverlay()"  style="margin-top: 100px;">add task</button>
+      <button class="btn" on-click="_openAnimatedOverlay"  style="margin-top: 100px;">add task</button>
     </div>
 
     <overlay-container></overlay-container>
@@ -170,7 +170,6 @@
 
       document.body.addEventListener('add-task', e => {
        this.push('tasks', e.detail);
-       this.set('tasks.counter', this.tasks.length);
       });
     }
 
@@ -181,12 +180,12 @@
       }));
     }
 
-  }
+    _openAnimatedOverlay() {
+      window.overlay = document.createElement('addtask-overlay');
+      overlay.open();
+    }
 
-  function openAnimatedOverlay() {
-    window.overlay = document.createElement('addtask-overlay');
-    overlay.open();
-   }
+  }
 
   customElements.define(HazloDashboardPage.is, HazloDashboardPage);
 

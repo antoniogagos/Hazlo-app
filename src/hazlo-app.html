@@ -3,20 +3,26 @@
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 
 <link rel="import" href="../bower_components/overlay-container/overlay-container.html">
 <link rel="import" href="addtask-overlay.html">
+<link rel="import" href="projects-overlay.html">
+<link rel="import" href="project-builder-overlay.html">
 
 <link rel="import" href="hazlo-welcome-page.html">
 <link rel="import" href="hazlo-drawer.html">
 <link rel="import" href="hazlo-dashboard-page.html">
+<link rel="import" href="hazlo-edit-task.html">
 
 <dom-module id="hazlo-app">
   <template>
     <style>
       :host {
-        --app-primary-color: #009eeb;
+        --app-primary-color: #088612;
         --app-secondary-color: black;
 
         display: block;
@@ -39,6 +45,16 @@
         provider="google"
         on-error="_handleError"></firebase-auth>
 
+    <firebase-query
+        id="query"
+        path="/users/[[user.uid]]/notes"
+        data="{{notes}}"></firebase-query>
+
+    <firebase-query
+        id="projects"
+        path="/users/[[user.uid]]/projects"
+        data="{{userProjects}}"></firebase-query>
+
     <app-location route="{{route}}"></app-location>
     <app-route
         route="[[route]]"
@@ -56,7 +72,7 @@
       <hazlo-signup-page name="signup"></hazlo-signup-page>
 
       <!-- login required -->
-      <hazlo-dashboard-page name="dashboard"></hazlo-dashboard-page>
+      <hazlo-dashboard-page name="dashboard" user="{{user}}" notes="{{notes}}"></hazlo-dashboard-page>
     </iron-pages>
 
   </template>
@@ -77,7 +93,9 @@
 
           routeData: Object,
 
-          subroute: Object
+          subroute: Object,
+
+          notes: Object,
 
         };
       }
@@ -87,7 +105,6 @@
           '_routeDataPageChanged(routeData.page, user)'
         ];
       }
-
 
       connectedCallback() {
         super.connectedCallback();
@@ -106,8 +123,30 @@
           this.$.auth.signOut();
         });
 
-        document.body.addEventListener('project-overlay', _ => {
-          openAnimatedOverlay();
+        document.body.addEventListener('add-task', e => {
+
+          this.$.query.ref.push({
+            content: e.detail.content,
+            project: e.detail.project,
+            date: e.detail.date
+          });
+        });
+
+        document.body.addEventListener('delete-task', e => {
+          var key = e.detail.key;
+          this.$.query.ref.child(key).remove();
+        });
+
+        document.body.addEventListener('add-new-project', e => {
+          this.$.projects.ref.push({
+            name: e.detail.projectName,
+            color: e.detail.color
+          });
+        });
+
+        document.body.addEventListener('delete-project', e => {
+          var key = e.detail.key;
+          this.$.projects.ref.child(key).remove();
         });
 
       }
@@ -125,14 +164,15 @@
       _signInWithGoogle() {
         this.$.auth.signInWithPopup()
           .then(function(response) {
-            // optionally handle a successful login
+            // successful authentication response here
           })
-          .catch(function(error) {
-            console.log('error', error);
-            // unsuccessful authentication response here
-          });
-      }
 
+          .catch(function(error) {
+            // unsuccessful authentication response here
+            console.log('error', error);
+        });
+
+      }
     }
 
     customElements.define(HazloApp.is, HazloApp);

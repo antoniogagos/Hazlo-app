@@ -59,9 +59,9 @@
       }
 
       .task-counter {
-        background-color: #50c6ff;
+        background-color: #6fcc09;
         border-radius: 100%;
-        box-shadow: 0px 0px 3px 0px #50c6ff;
+        box-shadow: 0px 0px 3px 0px #6fcc09;
         color: white;
         padding: 4px 10px;
       }
@@ -77,7 +77,7 @@
       <iron-icon icon="menu" on-click="_menuTapped"></iron-icon>
       <div class="toolbar__title">Hazlo</div>
       <iron-icon icon="bell-outline"></iron-icon>
-      <iron-icon on-click="_openAnimatedOverlay" icon="plus-circle-outline"></iron-icon>
+      <iron-icon on-click="openAnimatedOverlay" icon="plus-circle-outline"></iron-icon>
     </div>
 
     <div class="content">
@@ -88,27 +88,28 @@
       </div>
 
       <div id="tasks">
-        <dom-repeat  items="{{tasks}}">
+        <dom-repeat items="{{notes}}">
           <template>
             <div class="task">
+              <div class="task__date">[[item.date]]</div>
+              <div class="task__name">[[item.content]]</div>
+              <div class="task__project">[[item.project]]</div>
 
-              <div class="task__date">{{item.date}}</div>
-              <div class="task__name">{{item.taskName}}</div>
-              <div class="task__project">{{item.project}}</div>
-
-              <button on-click="_deleteTask" class="btn">delete</button>
+              <button note="[[item]]" on-click="_deleteTask" class="btn">delete</button>
+              <button note="[[item]]" on-click="_editTask" class="btn">edit</button>
             </div>
+
           </template>
         </dom-repeat>
       </div>
 
     </div>
 
-    <div class="empty-dashboard" hidden$="_computeEmptyDashVisible()">
+    <div class="empty-dashboard">
       <iron-icon id="weather-icon" icon="weather"></iron-icon>
       <p style="text-align:center; color: #757575;">No Task for Today. Enjoy!</p>
 
-      <button class="btn" on-click="_openAnimatedOverlay"  style="margin-top: 100px;">add task</button>
+      <button class="btn" on-click="openAnimatedOverlay" style="margin-top: 50px;">add task</button>
     </div>
 
     <overlay-container></overlay-container>
@@ -122,7 +123,6 @@
 
     static get properties() {
       return {
-
         taskCounter: {
           type: Number,
           value: 0
@@ -133,24 +133,54 @@
           value: _ => {
             return [];
           }
-        }
+        },
+
+        notes: Object,
 
       };
     }
 
     static get observers() {
       return [
-        '_task(tasks.length)'
+        '_tasks(notes.length)',
       ]
     }
 
-    _deleteTask(e) {
-      var taskIndex = e.model.__data.index;
+    connectedCallback() {
+      super.connectedCallback();
 
-      this.splice('tasks', taskIndex, 1);
+      document.body.addEventListener('projects-overlay', _ => {
+        window.overlay = document.createElement('projects-overlay');
+        overlay.open();
+      });
+
+      document.body.addEventListener('open-project-builder', _ => {
+        window.overlay = document.createElement('project-builder-overlay');
+        overlay.open();
+      });
+
     }
 
-    _task(counter) {
+    _deleteTask(e) {
+      var key = e.currentTarget.note.$key;
+
+      this.dispatchEvent(new CustomEvent('delete-task', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          "key": key
+        }
+      }));
+    }
+
+    _editTask(e) {
+      window.overlay = document.createElement('hazlo-edit-task');
+      overlay.item = e.currentTarget.note;
+      overlay.open();
+
+    }
+
+    _tasks(counter) {
       var empty_dashboard = this.shadowRoot.querySelector('.empty-dashboard');
       var taskCounter = this.shadowRoot.querySelector('.task-counter');
 
@@ -165,14 +195,6 @@
       this.taskCounter = counter;
     }
 
-    connectedCallback() {
-      super.connectedCallback();
-
-      document.body.addEventListener('add-task', e => {
-       this.push('tasks', e.detail);
-      });
-    }
-
     _menuTapped() {
       this.dispatchEvent(new CustomEvent('open-drawer', {
         bubbles: true,
@@ -180,7 +202,7 @@
       }));
     }
 
-    _openAnimatedOverlay() {
+    openAnimatedOverlay() {
       window.overlay = document.createElement('addtask-overlay');
       overlay.open();
     }

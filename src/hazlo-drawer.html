@@ -78,7 +78,7 @@
           Inbox
         </div>
 
-        <div name="projects">
+        <div on-click="_openProjectsOverlay" name="projects">
           <iron-icon icon="folder"></iron-icon>
           Projects
         </div>
@@ -129,6 +129,15 @@
           this.opened = false;
           this.selectedTab = null;
         }
+      }
+
+      _openProjectsOverlay() {
+        this.dispatchEvent(new CustomEvent('projects-overlay', {
+          bubbles: true,
+          composed: true
+        }));
+
+        this.opened = false;
       }
 
     }

@@ -5,9 +5,10 @@
 <link rel="import" href="../bower_components/polymerfire/firebase-query.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-document.html">
 
+
 <link rel="import" href="icons.html">
 
-<dom-module id="addtask-overlay">
+<dom-module id="hazlo-edit-task">
   <template>
     <style include="toolbar-styles btn-styles">
       :host {
@@ -141,8 +142,13 @@
         path="/users/[[user.uid]]/projects"
         data="{{userProjects}}"></firebase-query>
 
+    <firebase-query
+        id="editedTask"
+        path="/users/[[user.uid]]/notes"
+        data="{{editedTask}}"></firebase-query>
+
     <div class="toolbar">
-      <div class="toolbar__title">Add Task</div>
+      <div class="toolbar__title">Edit Task</div>
       <iron-icon on-click="_closeOverlay" icon="arrow-back"></iron-icon>
     </div>
 
@@ -150,7 +156,7 @@
 
       <div class="task-name-box">
         <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;" for="nameInput">Task Name</label>
-        <input id="taskName" class="input-taskName" type="text">
+        <input id="taskName" value="[[item.content]]" class="input-taskName" type="text">
       </div>
 
       <div class="project-box">
@@ -171,7 +177,7 @@
       <div class="date-box">
         <label style="padding: 10px 0; color: #bfbfbf; font-size: 15px;">Date</label>
 
-          <iron-selector attr-for-selected="name" selected="Today">
+          <iron-selector attr-for-selected="name" selected="[[item.date]]">
 
             <div class="a" name="Today">
               <iron-icon icon="today"></iron-icon>
@@ -204,16 +210,15 @@
 
   <script>
 
-    class AddTaskOverlay extends AnimatedOverlayMixin(Polymer.Element) {
+    class HazloEditTask extends AnimatedOverlayMixin(Polymer.Element) {
 
-      static get is() {return 'addtask-overlay';}
+      static get is() {return 'hazlo-edit-task';}
 
       static get properties() {
         return {
+          userProjects: Object,
 
           user: Object,
-
-          userProjects: Object,
 
           projects: {
             type: Object,
@@ -231,6 +236,9 @@
             }
           },
 
+          editedTask: {
+            type: Object,
+          },
         };
       }
 
@@ -241,38 +249,10 @@
           this.push('userProjects', this.projects[i]);
         }
 
-        var selected = this.shadowRoot.querySelector('.project-selector');
+        const selected = this.shadowRoot.querySelector('.project-selector'),
+        ProjColor = this.shadowRoot.querySelector('.project-color');
 
-        const ProjColor = this.shadowRoot.querySelector('.project-color');
         ProjColor.style.backgroundColor = this.projects[0].color;
-      }
-
-
-      _closeOverlay() {
-        overlay.opened = false;
-      }
-
-      _addTask() {
-        var taskName = this.shadowRoot.querySelector('.input-taskName').value,
-        project = this.shadowRoot.querySelector('.project-selector').value;
-
-        if (taskName !== '') {
-          var date = this.shadowRoot.querySelector('iron-selector').selected;
-
-          this.dispatchEvent(new CustomEvent('add-task', {
-            bubbles: true,
-            composed: true,
-            detail: {
-              "content": taskName,
-              "project": project,
-              "date": date
-            }
-          }));
-
-          this._closeOverlay();
-        } else {
-          console.log("Please name the task");
-        }
 
       }
 
@@ -282,9 +262,24 @@
         this.shadowRoot.querySelector('.project-color')
             .style.backgroundColor = selected.options[selected.selectedIndex].color;
       }
+
+      _addTask() {
+        this.$.editedTask.ref.child(this.item.$key).set({
+          'content': this.shadowRoot.querySelector('.input-taskName').value,
+          'date': this.shadowRoot.querySelector('iron-selector').selected,
+          'project': this.shadowRoot.querySelector('.project-selector').value
+        });
+
+        this.opened = false;
+      }
+
+      _closeOverlay() {
+        overlay.opened = false;
+      }
+
     }
 
-    customElements.define(AddTaskOverlay.is, AddTaskOverlay);
+    customElements.define(HazloEditTask.is, HazloEditTask);
 
   </script>
 </dom-module>

@@ -1,0 +1,138 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/overlay-container/animated-overlay-mixin.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+
+<link rel="import" href="icons.html">
+
+<dom-module id="projects-overlay">
+  <template>
+    <style include="toolbar-styles btn-styles">
+      :host {
+        background: #fff;
+        bottom: 0;
+        display: block;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      .content {
+        padding: 30px;
+        padding-top: 80px;
+      }
+
+      .project-container {
+        display: flex;
+        margin-bottom: 15px;
+      }
+
+    </style>
+
+    <firebase-auth
+        id="auth"
+        user="{{user}}"
+        provider="google"
+        on-error="_handleError"></firebase-auth>
+
+    <firebase-query
+        id="test"
+        path="/users/[[user.uid]]/projects"
+        data="{{userProjects}}"></firebase-query>
+
+    <div class="toolbar">
+      <div class="toolbar__title">Projects</div>
+      <iron-icon on-click="_closeOverlay" icon="arrow-back"></iron-icon>
+    </div>
+
+    <div class="content">
+      <dom-repeat items={{userProjects}}>
+        <template>
+          <div class="project-container">
+            <div style="align-self: center; margin-right: 20px; width: 10px; height:10px; background-color: {{_computeColor(item)}}"></div>
+            <div style="width: 100%;">[[item.name]]</div>
+            <iron-icon project="[[item]]" on-click="_deleteProject" icon="close"></iron-icon>
+          </div>
+
+        </template>
+      </dom-repeat>
+      <button class="btn" on-click="_addProject" style="margin-top: 100px;">add project</button>
+
+    </div>
+  </template>
+
+  <script>
+
+    class ProjectsOverlay extends AnimatedOverlayMixin(Polymer.Element) {
+
+      static get is() {return 'projects-overlay';}
+
+      static get properties() {
+        return {
+          user: Object,
+
+          userProjects: {
+            type: Object,
+          },
+
+          projects: {
+            type: Object,
+            value: _ => {
+              return [{
+                name: 'Business',
+                color: '#00796B',
+              }, {
+                name: 'Personal',
+                color: '#FFB300'
+              }, {
+                name: 'Home',
+                color: '#FF7043'
+              }];
+            }
+          },
+        };
+      }
+
+      _deleteProject(e) {
+        var key = e.currentTarget.project.$key;
+
+        if(key) {
+          this.dispatchEvent(new CustomEvent('delete-project', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              "key": key
+            }
+          }));
+        }
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        for (var i = 0; i < this.projects.length; i++) {
+          this.push('userProjects', this.projects[i]);
+        }
+      }
+
+      _computeColor(item) {
+        return item.color;
+      }
+
+      _addProject() {
+        this.dispatchEvent(new CustomEvent('open-project-builder', {
+          bubbles: true,
+          composed: true
+        }));
+      }
+
+      _closeOverlay() {
+        this.opened = false;
+      }
+
+    }
+    customElements.define(ProjectsOverlay.is, ProjectsOverlay);
+
+  </script>
+</dom-module>

@@ -1,0 +1,78 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+
+<dom-module id="hazlo-label-data">
+  <template>
+
+    <firebase-document
+        id="firebase"
+        path="/users/[[user.uid]]/labels"
+        data="{{_labels}}"></firebase-document>
+
+  </template>
+  <script>
+
+    class HazloLabelData extends Polymer.Element {
+
+      static get is() {return 'hazlo-label-data';}
+
+      static get defaultData() {
+        return [
+          {color: '#61bd4f'},
+          {color: '#f2d600'},
+          {color: '#ffab4a'},
+          {color: '#eb5a46'},
+          {color: '#c377e0'},
+          {color: '#0079bf'},
+          {color: '#ff80ce'},
+          {color: '#4d4d4d'}
+        ];
+      }
+
+      static get properties() {
+        return {
+
+          user: Object,
+
+          data: {
+            type: Array,
+            notify: true,
+            computed: '_computedData(_labels)'
+          },
+
+          _labels: {
+            type: Array,
+            observer: '_labelsChanged'
+          }
+
+        };
+      }
+
+      _labelsChanged(labels, old) {
+        const labelsEmpty = labels && !Object.keys(labels).length &&
+          old && !Object.keys(old).length;
+
+        if (labelsEmpty) {
+          clearTimeout(this._setLabelsJob);
+          // _labelsChanged is called twice when the data is fetched.
+          // If that data is empty, we set a default value here,
+          // using a timeout to make sure the default data is set once.
+          this._setLabelsJob = setTimeout(_ => {
+            this._labels = HazloLabelData.defaultData;
+            this._setLabelsJob = null;
+          });
+        }
+      }
+
+      _computedData(_labels) {
+        if (Array.isArray(_labels)) {
+          return _labels;
+        }
+      }
+
+    }
+
+    customElements.define(HazloLabelData.is, HazloLabelData);
+
+  </script>
+</dom-module>

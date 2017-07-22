@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
@@ -18,27 +19,37 @@
     <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
     <link rel="import" href="/bower_components/polymer/polymer.html">
 
-    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">
+    <!--<link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">-->
     <link rel="import" href="/src/hazlo-app.html">
+    <link rel="import" href="/bower_components/overlay-container/overlay-container.html">
 
     <!-- Add any global styles for body, document, etc. -->
     <style>
-      html {
-        height: 100%;
-      }
-
-      body {
-        color: #313131;
-        font-family: 'Varela Round', sans-serif;
-        line-height: 1.5;
-        margin: 0;
-        height: 100%;
-      }
+        html {
+            height: 100%;
+            --app-primary-color: #1fb6ff;
+            --app-secondary-color: #212121;
+        }
+        
+        body {
+            -webkit-font-smoothing: -webkit-font-smoothing;
+            background: #f9f9f9;
+            color: #212121;
+            font-family: 'Varela Round', sans-serif;
+            height: 100%;
+            line-height: 1.5;
+            margin: 0;
+            overflow: hidden;
+        }
     </style>
 
-  </head>
+</head>
 
-  <body>
+<body>
+
     <hazlo-app></hazlo-app>
-  </body>
+    <overlay-container></overlay-container>
+
+</body>
+
 </html>

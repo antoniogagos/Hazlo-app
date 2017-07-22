@@ -3,57 +3,84 @@
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
-
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-
-<link rel="import" href="../bower_components/overlay-container/overlay-container.html">
-<link rel="import" href="addtask-overlay.html">
-<link rel="import" href="projects-overlay.html">
-<link rel="import" href="project-builder-overlay.html">
 
 <link rel="import" href="hazlo-welcome-page.html">
 <link rel="import" href="hazlo-drawer.html">
 <link rel="import" href="hazlo-dashboard-page.html">
-<link rel="import" href="hazlo-edit-task.html">
 
 <dom-module id="hazlo-app">
-  <template>
+    <template>
     <style>
       :host {
-        --app-primary-color: #088612;
-        --app-secondary-color: black;
-
         display: block;
         height: 100%;
+        margin: auto;
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       iron-pages {
         height: 100%;
+      }
+
+      .spinner {
+        margin: 100px auto 0;
+        width: 70px;
+        text-align: center;
+      }
+
+      .spinner > div {
+        width: 18px;
+        height: 18px;
+        background-color: var(--app-primary-color);
+
+        border-radius: 100%;
+        display: inline-block;
+        -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+        animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+      }
+
+      .spinner .bounce1 {
+        -webkit-animation-delay: -0.32s;
+        animation-delay: -0.32s;
+      }
+
+      .spinner .bounce2 {
+        -webkit-animation-delay: -0.16s;
+        animation-delay: -0.16s;
+      }
+
+      @-webkit-keyframes sk-bouncedelay {
+        0%, 80%, 100% { -webkit-transform: scale(0) }
+        40% { -webkit-transform: scale(1.0) }
+      }
+
+      @keyframes sk-bouncedelay {
+        0%, 80%, 100% {
+          -webkit-transform: scale(0);
+          transform: scale(0);
+        } 40% {
+          -webkit-transform: scale(1.0);
+          transform: scale(1.0);
+        }
       }
     </style>
 
     <firebase-app
         auth-domain="hazlo-app-c809c.firebaseapp.com"
         api-key="AIzaSyD2fh7ZslNj4ZBrLTSwf7znhhzZ0EqgkZE"
-        database-url="https://hazlo-app-c809c.firebaseio.com/"></firebase-app>
+        database-url="https://hazlo-app-c809c.firebaseio.com/"
+        storage-bucket="gs://hazlo-app-c809c.appspot.com/"></firebase-app>
 
     <firebase-auth
         id="auth"
         user="{{user}}"
         provider="google"
+        status-known="{{statusKnown}}"
         on-error="_handleError"></firebase-auth>
-
-    <firebase-query
-        id="query"
-        path="/users/[[user.uid]]/notes"
-        data="{{notes}}"></firebase-query>
-
-    <firebase-query
-        id="projects"
-        path="/users/[[user.uid]]/projects"
-        data="{{userProjects}}"></firebase-query>
 
     <app-location route="{{route}}"></app-location>
     <app-route
@@ -64,117 +91,96 @@
     </app-route>
 
     <hazlo-drawer id="drawer" user="[[user]]"></hazlo-drawer>
+    <div class="spinner" hidden$="[[statusKnown]]">
+      <div class="bounce1"></div>
+      <div class="bounce2"></div>
+      <div class="bounce3"></div>
+    </div>
 
-    <iron-pages selected="[[page]]" attr-for-selected="name"> <!-- [[page]] -->
+    <iron-pages selected="[[page]]" attr-for-selected="name">
       <!-- no login required -->
       <hazlo-welcome-page name="welcome" user="{{user}}"></hazlo-welcome-page>
       <hazlo-signin-page name="signin"></hazlo-signin-page>
       <hazlo-signup-page name="signup"></hazlo-signup-page>
 
       <!-- login required -->
-      <hazlo-dashboard-page name="dashboard" user="{{user}}" notes="{{notes}}"></hazlo-dashboard-page>
+      <hazlo-dashboard-page name="dashboard" user="{{user}}"></hazlo-dashboard-page>
     </iron-pages>
 
   </template>
-  <script>
+    <script>
+        class HazloApp extends Polymer.Element {
 
-    class HazloApp extends Polymer.Element {
+            static get is() {
+                return 'hazlo-app';
+            }
 
-      static get is() { return 'hazlo-app'; }
+            static get properties() {
+                return {
 
-      static get properties() {
-        return {
+                    user: Object,
 
-          user: Object,
+                    page: String,
 
-          page: String,
+                    route: Object,
 
-          route: Object,
+                    routeData: Object,
 
-          routeData: Object,
+                    subroute: Object,
 
-          subroute: Object,
+                };
+            }
 
-          notes: Object,
+            static get observers() {
+                return [
+                    '_routeDataPageChanged(routeData.page, statusKnown, user)'
+                ];
+            }
 
-        };
-      }
+            connectedCallback() {
+                super.connectedCallback();
 
-      static get observers() {
-        return [
-          '_routeDataPageChanged(routeData.page, user)'
-        ];
-      }
+                this.addEventListener('open-drawer', _ => {
+                    this.$.drawer.opened = true;
+                });
 
-      connectedCallback() {
-        super.connectedCallback();
+                document.body.addEventListener('signin', event => {
+                    if (event.detail.provider === 'google') {
+                        this._signInWithGoogle();
+                    }
+                });
 
-        document.body.addEventListener('open-drawer', _ => {
-          this.$.drawer.opened = true;
-        });
+                document.body.addEventListener('logout', _ => {
+                    this.$.auth.signOut();
+                });
+            }
 
-        document.body.addEventListener('signin', event => {
-          if (event.detail.provider === 'google') {
-            this._signInWithGoogle();
-          }
-        });
+            _routeDataPageChanged(page, statusKnown, user) {
+                if (!statusKnown) {
+                    return;
+                }
+                if (!page) {
+                    page = user ? 'dashboard' : 'welcome';
+                } else if (!user) {
+                    page = 'welcome';
+                }
+                this.page = page;
+            }
 
-        document.body.addEventListener('logout', _ => {
-          this.$.auth.signOut();
-        });
+            _signInWithGoogle() {
+                this.$.auth.signInWithPopup()
+                    .then(function(response) {
+                        // successful authentication response here
+                    })
 
-        document.body.addEventListener('add-task', e => {
+                .catch(function(error) {
+                    // unsuccessful authentication response here
+                    console.log('error', error);
+                });
 
-          this.$.query.ref.push({
-            content: e.detail.content,
-            project: e.detail.project,
-            date: e.detail.date
-          });
-        });
-
-        document.body.addEventListener('delete-task', e => {
-          var key = e.detail.key;
-          this.$.query.ref.child(key).remove();
-        });
-
-        document.body.addEventListener('add-new-project', e => {
-          this.$.projects.ref.push({
-            name: e.detail.projectName,
-            color: e.detail.color
-          });
-        });
-
-        document.body.addEventListener('delete-project', e => {
-          var key = e.detail.key;
-          this.$.projects.ref.child(key).remove();
-        });
-
-      }
-
-      _routeDataPageChanged(page, user) {
-        if (!page) {
-          page = user ? 'dashboard' : 'welcome';
-        } else if (!user) {
-          page = 'welcome';
+            }
         }
 
-        this.page = page;
-      }
-
-      _signInWithGoogle() {
-        this.$.auth.signInWithPopup()
-          .then(function(response) {
-            // successful authentication response here
-          })
-
-          .catch(function(error) {
-            // unsuccessful authentication response here
-            console.log('error', error);
-        });
-
-      }
-    }
-
-    customElements.define(HazloApp.is, HazloApp);
-  </script>
+        customElements.define(HazloApp.is, HazloApp);
+    </script>
 </dom-module>

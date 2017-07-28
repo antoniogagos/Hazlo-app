@@ -215,374 +215,374 @@
     </iron-selector>
     </template>
     <script>
-        class HazloDashboardPage extends Polymer.Element {
+      class HazloDashboardPage extends Polymer.Element {
 
-            static get is() {
-                return 'hazlo-dashboard-page';
+        static get is() {
+          return 'hazlo-dashboard-page';
+        }
+
+        static get properties() {
+          return {
+
+            currentTab: {
+              type: String,
+              value: 'tasks'
+            },
+
+            user: Object,
+
+            tasks: {
+              type: Array
+            },
+
+            dragging: {
+              type: Boolean,
+              readOnly: true
+            },
+
+            itemsToBeDeleted: {
+              type: Boolean,
+              value: false,
+              observer: '_itemsDeleted'
+            },
+
+            _tasksData: Object,
+
+            _completedTasks: {
+              type: Array,
+              computed: '_computedCompletedTasks(tasks.*)'
+            },
+
+            _filteredTasks: {
+              type: Array,
+              computed: '_computedFilteredTasks(tasks.*)'
             }
 
-            static get properties() {
-                return {
+          };
+        }
 
-                    currentTab: {
-                        type: String,
-                        value: 'tasks'
-                    },
+        static get observers() {
+          return [
+            '_tasksDataChanged(_tasksData.*)'
+          ];
+        }
 
-                    user: Object,
+        constructor() {
+          super();
+          this._onDocumentKeydown = this._onDocumentKeydown.bind(this);
+          this._onDragStart = this._onDragStart.bind(this);
+          this._handleTrackEvent = this._handleTrackEvent.bind(this);
+          this._handleDeleteEvent = this._handleDeleteEvent.bind(this);
+        }
 
-                    tasks: {
-                        type: Array
-                    },
-
-                    dragging: {
-                        type: Boolean,
-                        readOnly: true
-                    },
-
-                    itemsToBeDeleted: {
-                        type: Boolean,
-                        value: false,
-                        observer: '_itemsDeleted'
-                    },
-
-                    _tasksData: Object,
-
-                    _completedTasks: {
-                        type: Array,
-                        computed: '_computedCompletedTasks(tasks.*)'
-                    },
-
-                    _filteredTasks: {
-                        type: Array,
-                        computed: '_computedFilteredTasks(tasks.*)'
-                    }
-
-                };
-            }
-
-            static get observers() {
-                return [
-                    '_tasksDataChanged(_tasksData.*)'
-                ];
-            }
-
-            constructor() {
-                super();
-                this._onDocumentKeydown = this._onDocumentKeydown.bind(this);
-                this._onDragStart = this._onDragStart.bind(this);
-                this._handleTrackEvent = this._handleTrackEvent.bind(this);
-                this._handleDeleteEvent = this._handleDeleteEvent.bind(this);
-            }
-
-            connectedCallback() {
-                super.connectedCallback();
-                requestIdleCallback(_ => {
-                    this._toggleListeners({
-                        enable: true
-                    });
-                });
-
-            }
-
-            disconnectedCallback() {
-                super.disconnectedCallback();
-                this._toggleListeners({
-                    enable: false
-                });
-            }
-
-            _itemsDeleted(state) {
-                if (state) {
-                    console.log("Delete Items!");
-                } else {
-                    let itemsDeleting = this.shadowRoot.querySelectorAll('.task__delete');
-                    if (itemsDeleting.length !== 0) {
-                        itemsDeleting.forEach(item => {
-                            item.classList.remove('task__delete');
-                        });
-                    }
-                }
-            }
-
-            _toggleListeners({
-                enable
-            }) {
-                const m = enable ? 'addEventListener' : 'removeEventListener';
-                document[m]('keydown', this._onDocumentKeydown);
-                this.$.tasksList[m]('dragstart', this._onDragStart);
-                this.$.tasksList[m]('mousedown', this._handleTrackEvent);
-                this.$.tasksList[m]('touchstart', this._handleTrackEvent);
-
-                this.$.taskListCompleted[m]('touchstart', this._handleDeleteEvent);
-                this.$.taskListCompleted[m]('mousedown', this._handleDeleteEvent);
-                this.$.taskListCompleted[m]('touchend', this._handleDeleteEvent);
-                this.$.taskListCompleted[m]('mouseup', this._handleDeleteEvent);
-
-            }
-
-            _toggleTrackListeners({
-                enable
-            }) {
-                const m = enable ? 'addEventListener' : 'removeEventListener';
-                document[m]('mousemove', this._handleTrackEvent);
-                document[m]('mouseup', this._handleTrackEvent);
-                document[m]('touchmove', this._handleTrackEvent);
-                document[m]('touchend', this._handleTrackEvent);
-            }
-
-            _handleDeleteEvent(event) {
-                if (!window.matchMedia("(min-width: 700px)").matches) {
-                    const type = event ? event.type : null;
-
-                    if (type === 'touchstart') {
-                        let target = this._elementFromEvent(event, '.task');
-                        let itemsToBeDeleted = this.shadowRoot.querySelectorAll('.task__delete').length
-                        let targetDeleting = this._elementFromEvent(event, '.task__delete');
-
-                        if (targetDeleting) {
-
-                            target.classList.remove('task__delete');
-                            if (itemsToBeDeleted == 1) {
-                                this.itemsToBeDeleted = false;
-                            }
-                        } else {
-
-                            if (this.shadowRoot.querySelectorAll('.task__delete').length == 0) {
-
-                                this._deleted = setTimeout(_ => {
-                                    target.classList.add('task__delete');
-                                    this.itemsToBeDeleted = true;
-                                }, 300);
-                            } else {
-                                target.classList.add('task__delete');
-                            }
-                        }
-
-                    }
-
-                    if (type === 'touchend') {
-                        clearTimeout(this._deleted);
-                    }
-                }
-
-
-            }
-
-            _handleTrackEvent(event) {
-                const type = event ? event.type : null;
-                if (type === 'mousedown' ||  type === 'touchstart') {
-                    this._startX = this._pageXFromEvent(event);
-                    this._toggleTrackListeners({
-                        enable: true
-                    });
-                }
-                if (type === 'mousemove' ||  type === 'touchmove') {
-                    const x = this._pageXFromEvent(event);
-                    this._dx = x - this._startX; // x distance
-                    if ((!this.dragging) &&
-                        (Math.abs(this._dx) >= 4) &&
-                        (this._elementFromEvent(event, '.task'))) {
-                        // Track Start
-                        this._setDragging(true);
-                        this._trackStart(event);
-                    } else if (this.dragging) {
-                        // Track
-                        this._track(event);
-                    }
-                }
-                if (type === 'mouseup' ||  type === 'touchend') {
-                    if (this.dragging) {
-                        // Track End
-
-                        this._setDragging(false);
-                        this._trackEnd();
-                    }
-                    this._toggleTrackListeners({
-                        enable: false
-                    });
-                    this._startX = null;
-                    this._dx = null;
-                }
-            }
-
-            _trackStart(event) {
-                if (!event.touches) {
-                    // Chrome logs a warning if calling preventDefault on a touch event.
-                    event.preventDefault();
-                }
-                const target = this._elementFromEvent(event, '.task');
-                if (target) {
-                    this._target = target;
-                    this._targetRect = this._target.getBoundingClientRect();
-                    this._targetItem = this.$.tasksDomRepeat.itemForElement(this._target);
-                    this._target.style.willChange = 'transform opacity';
-                }
-            }
-
-            _track(event) {
-                const x = this._pageXFromEvent(event);
-                this._distance = Math.abs(this._dx) / this._targetRect.width;
-                const opacity = 1 - Math.pow(this._distance, 2);
-                this._target.style.transform = `translateX(${this._dx}px)`;
-                this._target.style.opacity = opacity;
-            }
-
-            _trackEnd() {
-                const {
-                    transform,
-                    opacity
-                } = this._target.style;
-                const deleteItem = this._distance >= 0.35;
-                const duration = this._distance * 400;
-                let animation;
-                if (deleteItem) {
-                    const translateTo = this._dx > 0 ? '100%' : '-100%';
-                    animation = this._target.animate([{
-                        transform,
-                        opacity
-                    }, {
-                        transform: `translateX(${translateTo})`,
-                        opacity: 0
-                    }], {
-                        duration
-                    });
-                } else {
-                    animation = this._target.animate([{
-                        transform,
-                        opacity
-                    }, {
-                        transform: 'translateX(0)',
-                        opacity: 1
-                    }], {
-                        duration
-                    });
-                }
-                // Animation finished
-                animation.onfinish = _ => {
-                    if (deleteItem) {
-                        this._completeTask(this._targetItem);
-                    }
-                    this._target.style.opacity = '';
-                    this._target.style.transform = '';
-                    this._target.style.willChange = '';
-                    this._target = null;
-                    this._targetItem = null;
-                    this._distance = null;
-                };
-            }
-
-            _completeTask(item) {
-                this.set(`_tasksData.${item.$key}.completed`, true);
-            }
-
-            _uploadImage(task) {
-                let storage = firebase.storage().ref();
-                if (task.image) {
-                    storage.child(task.image).getDownloadURL().then(function(url) {
-                        this.set(`_tasksData.${task.$key}.url`, url);
-                    }.bind(this)).catch(function(error) {
-                        console.log(error);
-                    }.bind(this));
-                }
-            }
-
-            _onDocumentKeydown(event) {
-                if (event.key === 'Escape' && this.dragging) {
-                    this._handleTrackEvent(new CustomEvent('mouseup'));
-                }
-            }
-
-            _onDragStart(event) {
-                event.preventDefault();
-            }
-
-            _elementFromEvent(event, selector) {
-                return event.composedPath().find(node => {
-                    return node.nodeType === Node.ELEMENT_NODE &&
-                        node.matches(selector);
-                });
-            }
-
-            _pageXFromEvent(event) {
-                return typeof event.pageX === 'number' ? event.pageX : event.touches[0].pageX;
-            }
-
-            _onNewClicked() {
-                if (!this._newTaskOverlay) {
-                    this._newTaskOverlay = document.createElement('hazlo-new-task-overlay');
-                    this._newTaskOverlay.setProperties({
-                        user: this.user,
-                        onDetach: _ => {
-                            this._newTaskOverlay = null;
-                        }
-                    });
-                    this._newTaskOverlay.open();
-                }
-            }
-
-            _deleteItem(e) {
-                if (!e.currentTarget.note) {
-                    const items = this.shadowRoot.querySelectorAll('.task__delete');
-                    items.forEach(item => {
-                        if (item.note.image) {
-                            firebase.storage().ref().child(item.note.image).delete();
-                        }
-                        this.$.userTasks.ref.child(item.note.$key).remove();
-                    });
-                    this.itemsToBeDeleted = false;
-
-                } else {
-                    let item = e.currentTarget.note;
-                    this.$.userTasks.ref.child(item.$key).remove();
-                    if (item.image) {
-                        firebase.storage().ref().child(item.image).delete();
-                    }
-                }
-
-            }
-
-            _onMoreClicked() {
-                this.dispatchEvent(new CustomEvent('open-drawer', {
-                    composed: true
-                }));
-            }
-
-            _tasksDataChanged() {
-                this.tasks = this._tasksDataToArray(this._tasksData);
-            }
-
-            _computedCompletedTasks() {
-                return this.tasks.filter(task => {
-                    return task.completed;
-                });
-            }
-
-            _computedFilteredTasks() {
-                if (this.tasks && this.tasks.length) {
-                    return this.tasks.filter(task => {
-                        this._uploadImage(task);
-                        return !task.completed;
-                    });
-                }
-                return [];
-            }
-
-            _tasksDataToArray(tasks) {
-                const keys = Object.keys(tasks);
-
-                const collection = [];
-                keys.map(key => {
-                    const item = tasks[key];
-
-                    item.$key = key;
-                    collection.push(item);
-                });
-                return collection;
-            }
+        connectedCallback() {
+          super.connectedCallback();
+          requestIdleCallback(_ => {
+            this._toggleListeners({
+              enable: true
+            });
+          });
 
         }
 
-        customElements.define(HazloDashboardPage.is, HazloDashboardPage);
+        disconnectedCallback() {
+          super.disconnectedCallback();
+          this._toggleListeners({
+            enable: false
+          });
+        }
+
+        _itemsDeleted(state) {
+          if (state) {
+            console.log("Delete Items!");
+          } else {
+            let itemsDeleting = this.shadowRoot.querySelectorAll('.task__delete');
+            if (itemsDeleting.length !== 0) {
+              itemsDeleting.forEach(item => {
+                item.classList.remove('task__delete');
+              });
+            }
+          }
+        }
+
+        _toggleListeners({
+            enable
+        }) {
+          const m = enable ? 'addEventListener' : 'removeEventListener';
+          document[m]('keydown', this._onDocumentKeydown);
+          this.$.tasksList[m]('dragstart', this._onDragStart);
+          this.$.tasksList[m]('mousedown', this._handleTrackEvent);
+          this.$.tasksList[m]('touchstart', this._handleTrackEvent);
+
+          this.$.taskListCompleted[m]('touchstart', this._handleDeleteEvent);
+          this.$.taskListCompleted[m]('mousedown', this._handleDeleteEvent);
+          this.$.taskListCompleted[m]('touchend', this._handleDeleteEvent);
+          this.$.taskListCompleted[m]('mouseup', this._handleDeleteEvent);
+
+        }
+
+        _toggleTrackListeners({
+            enable
+        }) {
+          const m = enable ? 'addEventListener' : 'removeEventListener';
+          document[m]('mousemove', this._handleTrackEvent);
+          document[m]('mouseup', this._handleTrackEvent);
+          document[m]('touchmove', this._handleTrackEvent);
+          document[m]('touchend', this._handleTrackEvent);
+        }
+
+        _handleDeleteEvent(event) {
+          if (!window.matchMedia("(min-width: 700px)").matches) {
+            const type = event ? event.type : null;
+
+            if (type === 'touchstart') {
+              let target = this._elementFromEvent(event, '.task');
+              let itemsToBeDeleted = this.shadowRoot.querySelectorAll('.task__delete').length
+              let targetDeleting = this._elementFromEvent(event, '.task__delete');
+
+              if (targetDeleting) {
+
+                target.classList.remove('task__delete');
+                if (itemsToBeDeleted == 1) {
+                  this.itemsToBeDeleted = false;
+                }
+              } else {
+
+                if (this.shadowRoot.querySelectorAll('.task__delete').length == 0) {
+
+                  this._deleted = setTimeout(_ => {
+                    target.classList.add('task__delete');
+                    this.itemsToBeDeleted = true;
+                  }, 300);
+                } else {
+                  target.classList.add('task__delete');
+                }
+              }
+
+            }
+
+            if (type === 'touchend') {
+              clearTimeout(this._deleted);
+            }
+          }
+
+
+        }
+
+        _handleTrackEvent(event) {
+          const type = event ? event.type : null;
+          if (type === 'mousedown' || type === 'touchstart') {
+            this._startX = this._pageXFromEvent(event);
+            this._toggleTrackListeners({
+              enable: true
+            });
+          }
+          if (type === 'mousemove' || type === 'touchmove') {
+            const x = this._pageXFromEvent(event);
+            this._dx = x - this._startX; // x distance
+            if ((!this.dragging) &&
+              (Math.abs(this._dx) >= 4) &&
+              (this._elementFromEvent(event, '.task'))) {
+              // Track Start
+              this._setDragging(true);
+              this._trackStart(event);
+            } else if (this.dragging) {
+              // Track
+              this._track(event);
+            }
+          }
+          if (type === 'mouseup' || type === 'touchend') {
+            if (this.dragging) {
+              // Track End
+
+              this._setDragging(false);
+              this._trackEnd();
+            }
+            this._toggleTrackListeners({
+              enable: false
+            });
+            this._startX = null;
+            this._dx = null;
+          }
+        }
+
+        _trackStart(event) {
+          if (!event.touches) {
+            // Chrome logs a warning if calling preventDefault on a touch event.
+            event.preventDefault();
+          }
+          const target = this._elementFromEvent(event, '.task');
+          if (target) {
+            this._target = target;
+            this._targetRect = this._target.getBoundingClientRect();
+            this._targetItem = this.$.tasksDomRepeat.itemForElement(this._target);
+            this._target.style.willChange = 'transform opacity';
+          }
+        }
+
+        _track(event) {
+          const x = this._pageXFromEvent(event);
+          this._distance = Math.abs(this._dx) / this._targetRect.width;
+          const opacity = 1 - Math.pow(this._distance, 2);
+          this._target.style.transform = `translateX(${this._dx}px)`;
+          this._target.style.opacity = opacity;
+        }
+
+        _trackEnd() {
+          const {
+                transform,
+            opacity
+            } = this._target.style;
+          const deleteItem = this._distance >= 0.35;
+          const duration = this._distance * 400;
+          let animation;
+          if (deleteItem) {
+            const translateTo = this._dx > 0 ? '100%' : '-100%';
+            animation = this._target.animate([{
+              transform,
+              opacity
+            }, {
+              transform: `translateX(${translateTo})`,
+              opacity: 0
+            }], {
+                duration
+              });
+          } else {
+            animation = this._target.animate([{
+              transform,
+              opacity
+            }, {
+              transform: 'translateX(0)',
+              opacity: 1
+            }], {
+                duration
+              });
+          }
+          // Animation finished
+          animation.onfinish = _ => {
+            if (deleteItem) {
+              this._completeTask(this._targetItem);
+            }
+            this._target.style.opacity = '';
+            this._target.style.transform = '';
+            this._target.style.willChange = '';
+            this._target = null;
+            this._targetItem = null;
+            this._distance = null;
+          };
+        }
+
+        _completeTask(item) {
+          this.set(`_tasksData.${item.$key}.completed`, true);
+        }
+
+        _uploadImage(task) {
+          let storage = firebase.storage().ref();
+          if (task.image) {
+            storage.child(task.image).getDownloadURL().then(function (url) {
+              this.set(`_tasksData.${task.$key}.url`, url);
+            }.bind(this)).catch(function (error) {
+              console.log(error);
+            }.bind(this));
+          }
+        }
+
+        _onDocumentKeydown(event) {
+          if (event.key === 'Escape' && this.dragging) {
+            this._handleTrackEvent(new CustomEvent('mouseup'));
+          }
+        }
+
+        _onDragStart(event) {
+          event.preventDefault();
+        }
+
+        _elementFromEvent(event, selector) {
+          return event.composedPath().find(node => {
+            return node.nodeType === Node.ELEMENT_NODE &&
+              node.matches(selector);
+          });
+        }
+
+        _pageXFromEvent(event) {
+          return typeof event.pageX === 'number' ? event.pageX : event.touches[0].pageX;
+        }
+
+        _onNewClicked() {
+          if (!this._newTaskOverlay) {
+            this._newTaskOverlay = document.createElement('hazlo-new-task-overlay');
+            this._newTaskOverlay.setProperties({
+              user: this.user,
+              onDetach: _ => {
+                this._newTaskOverlay = null;
+              }
+            });
+            this._newTaskOverlay.open();
+          }
+        }
+
+        _deleteItem(e) {
+          if (!e.currentTarget.note) {
+            const items = this.shadowRoot.querySelectorAll('.task__delete');
+            items.forEach(item => {
+              if (item.note.image) {
+                firebase.storage().ref().child(item.note.image).delete();
+              }
+              this.$.userTasks.ref.child(item.note.$key).remove();
+            });
+            this.itemsToBeDeleted = false;
+
+          } else {
+            let item = e.currentTarget.note;
+            this.$.userTasks.ref.child(item.$key).remove();
+            if (item.image) {
+              firebase.storage().ref().child(item.image).delete();
+            }
+          }
+
+        }
+
+        _onMoreClicked() {
+          this.dispatchEvent(new CustomEvent('open-drawer', {
+            composed: true
+          }));
+        }
+
+        _tasksDataChanged() {
+          this.tasks = this._tasksDataToArray(this._tasksData);
+        }
+
+        _computedCompletedTasks() {
+          return this.tasks.filter(task => {
+            return task.completed;
+          });
+        }
+
+        _computedFilteredTasks() {
+          if (this.tasks && this.tasks.length) {
+            return this.tasks.filter(task => {
+              this._uploadImage(task);
+              return !task.completed;
+            });
+          }
+          return [];
+        }
+
+        _tasksDataToArray(tasks) {
+          const keys = Object.keys(tasks);
+
+          const collection = [];
+          keys.map(key => {
+            const item = tasks[key];
+
+            item.$key = key;
+            collection.push(item);
+          });
+          return collection;
+        }
+
+      }
+
+      customElements.define(HazloDashboardPage.is, HazloDashboardPage);
     </script>
 </dom-module>

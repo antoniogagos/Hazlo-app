@@ -4,15 +4,16 @@
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-
+<link rel="import" href="../bower_components/lazy-imports/lazy-imports-mixin.html">
 <link rel="import" href="hazlo-welcome-page.html">
-<link rel="import" href="hazlo-drawer.html">
-<link rel="import" href="hazlo-dashboard-page.html">
 
 <dom-module id="hazlo-app">
-    <template>
+  <link rel="lazy-import" group="lazy" href="hazlo-drawer.html">
+  <link rel="lazy-import" group="lazy" href="hazlo-dashboard-page.html">
+
+  <template>
     <style>
-      :host {
+       :host {
         display: block;
         max-width: 850px;
         position: relative;
@@ -27,7 +28,7 @@
       iron-pages {
         height: 100%;
         max-width: inherit;
-        box-shadow: 0 1px 1px 0 rgba(0,0,0,0.06), 0 2px 5px 0 rgba(0,0,0,0.2);
+        box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.06), 0 2px 5px 0 rgba(0, 0, 0, 0.2);
       }
 
       .spinner {
@@ -36,7 +37,7 @@
         text-align: center;
       }
 
-      .spinner > div {
+      .spinner>div {
         width: 18px;
         height: 18px;
         background-color: var(--app-primary-color);
@@ -58,40 +59,37 @@
       }
 
       @-webkit-keyframes sk-bouncedelay {
-        0%, 80%, 100% { -webkit-transform: scale(0) }
-        40% { -webkit-transform: scale(1.0) }
+        0%,
+        80%,
+        100% {
+          -webkit-transform: scale(0)
+        }
+        40% {
+          -webkit-transform: scale(1.0)
+        }
       }
 
       @keyframes sk-bouncedelay {
-        0%, 80%, 100% {
+        0%,
+        80%,
+        100% {
           -webkit-transform: scale(0);
           transform: scale(0);
-        } 40% {
+        }
+        40% {
           -webkit-transform: scale(1.0);
           transform: scale(1.0);
         }
       }
     </style>
 
-    <firebase-app
-        auth-domain="hazlo-app-c809c.firebaseapp.com"
-        api-key="AIzaSyD2fh7ZslNj4ZBrLTSwf7znhhzZ0EqgkZE"
-        database-url="https://hazlo-app-c809c.firebaseio.com/"
-        storage-bucket="gs://hazlo-app-c809c.appspot.com/"></firebase-app>
+    <firebase-app auth-domain="hazlo-app-c809c.firebaseapp.com" api-key="AIzaSyD2fh7ZslNj4ZBrLTSwf7znhhzZ0EqgkZE" database-url="https://hazlo-app-c809c.firebaseio.com/"
+      storage-bucket="gs://hazlo-app-c809c.appspot.com/"></firebase-app>
 
-    <firebase-auth
-        id="auth"
-        user="{{user}}"
-        provider="google"
-        status-known="{{statusKnown}}"
-        on-error="_handleError"></firebase-auth>
+    <firebase-auth id="auth" user="{{user}}" provider="google" status-known="{{statusKnown}}" on-error="_handleError"></firebase-auth>
 
     <app-location route="{{route}}"></app-location>
-    <app-route
-        route="[[route]]"
-        pattern="/:page"
-        data="{{routeData}}"
-        tail="{{subroute}}">
+    <app-route route="[[route]]" pattern="/:page" data="{{routeData}}" tail="{{subroute}}">
     </app-route>
 
     <hazlo-drawer id="drawer" user="[[user]]"></hazlo-drawer>
@@ -112,79 +110,85 @@
     </iron-pages>
 
   </template>
-    <script>
-        class HazloApp extends Polymer.Element {
+  <script>
+    class HazloApp extends Polymer.LazyImportsMixin(Polymer.Element) {
 
-            static get is() {
-                return 'hazlo-app';
-            }
+      static get is() {
+        return 'hazlo-app';
+      }
 
-            static get properties() {
-                return {
+      static get properties() {
+        return {
 
-                    user: Object,
+          user: Object,
 
-                    page: String,
+          page: String,
 
-                    route: Object,
+          route: Object,
 
-                    routeData: Object,
+          routeData: Object,
 
-                    subroute: Object,
+          subroute: Object,
 
-                };
-            }
+        };
+      }
 
-            static get observers() {
-                return [
-                    '_routeDataPageChanged(routeData.page, statusKnown, user)'
-                ];
-            }
+      static get observers() {
+        return [
+          '_routeDataPageChanged(routeData.page, statusKnown, user)'
+        ];
+      }
 
-            connectedCallback() {
-                super.connectedCallback();
+      connectedCallback() {
+        super.connectedCallback();
 
-                this.addEventListener('open-drawer', _ => {
-                    this.$.drawer.opened = true;
-                });
+        this.addEventListener('open-drawer', _ => {
+          this.$.drawer.opened = true;
+        });
 
-                document.body.addEventListener('signin', event => {
-                    if (event.detail.provider === 'google') {
-                        this._signInWithGoogle();
-                    }
-                });
+        document.body.addEventListener('signin', event => {
+          if (event.detail.provider === 'google') {
+            this._signInWithGoogle();
+          }
+        });
 
-                document.body.addEventListener('logout', _ => {
-                    this.$.auth.signOut();
-                });
-            }
+        document.body.addEventListener('logout', _ => {
+          this.$.auth.signOut();
+        });
 
-            _routeDataPageChanged(page, statusKnown, user) {
-                if (!statusKnown) {
-                    return;
-                }
-                if (!page) {
-                    page = user ? 'dashboard' : 'welcome';
-                } else if (!user) {
-                    page = 'welcome';
-                }
-                this.page = page;
-            }
+        this.importLazyGroup('lazy');
+      }
 
-            _signInWithGoogle() {
-                this.$.auth.signInWithPopup()
-                    .then(function(response) {
-                        // successful authentication response here
-                    })
+      _handleError(event) {
+        console.log('auth error', event)
+      }
 
-                .catch(function(error) {
-                    // unsuccessful authentication response here
-                    console.log('error', error);
-                });
-
-            }
+      _routeDataPageChanged(page, statusKnown, user) {
+        if (!statusKnown) {
+          return;
         }
+        if (!page) {
+          page = user ? 'dashboard' : 'welcome';
+        } else if (!user) {
+          page = 'welcome';
+        }
+        this.page = page;
+      }
 
-        customElements.define(HazloApp.is, HazloApp);
-    </script>
+      _signInWithGoogle() {
+        this.$.auth.signInWithPopup()
+          .then(function (response) {
+            // successful authentication response here
+          })
+
+          .catch(function (error) {
+            // unsuccessful authentication response here
+            console.log('error', error);
+          });
+
+      }
+    }
+
+    customElements.define(HazloApp.is, HazloApp);
+  </script>
 </dom-module>

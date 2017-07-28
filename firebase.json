@@ -3,6 +3,13 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "build/default"
+    "public": "build/es6-unbundled",
+    "headers": [{
+      "source": "/service-worker.js",
+      "headers": [{
+        "key": "Cache-Control",
+        "value": "max-age=0"
+      }]
+    }]
   }
 }

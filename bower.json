@@ -15,6 +15,7 @@
     "iron-iconset-svg": "PolymerElements/iron-iconset-svg#2.0-preview",
     "iron-pages": "PolymerElements/iron-pages#2.0-preview",
     "overlay-container": "sharedlabs/overlay-container",
+    "lazy-imports": "Polymer/lazy-imports",
     "polymer": "Polymer/polymer#^2.0.0-rc.3",
     "polymerfire": "firebase/polymerfire#2.0-preview"
   }

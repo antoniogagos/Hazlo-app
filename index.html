@@ -1,55 +1,60 @@
 <!doctype html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>Hazlo</title>
-    <meta name="description" content="Simple TODO app">
+      <title>Hazlo</title>
+      <meta name="description" content="Simple TODO app">
 
-    <link rel="icon" href="/images/favicon.ico">
+      <link rel="icon" href="/images/favicon.ico">
 
-    <!-- See https://goo.gl/OOhYW5 -->
-    <link rel="manifest" href="/manifest.json">
+      <!-- See https://goo.gl/OOhYW5 -->
+      <link rel="manifest" href="/manifest.json">
 
-    <!-- See https://goo.gl/qRE0vM -->
-    <meta name="theme-color" content="#3f51b5">
+      <!-- See https://goo.gl/qRE0vM -->
+      <meta name="theme-color" content="#3f51b5">
 
-    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-    <link rel="import" href="/bower_components/polymer/polymer.html">
+      <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+      <!--<link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">-->
+      <link rel="import" href="/src/hazlo-app.html">
+      <link rel="import" href="/bower_components/overlay-container/overlay-container.html">
 
-    <!--<link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">-->
-    <link rel="import" href="/src/hazlo-app.html">
-    <link rel="import" href="/bower_components/overlay-container/overlay-container.html">
+      <!-- Add any global styles for body, document, etc. -->
+      <style>
+          html {
+              height: 100%;
+              --app-primary-color: #1fb6ff;
+              --app-secondary-color: #212121;
+          }
 
-    <!-- Add any global styles for body, document, etc. -->
-    <style>
-        html {
-            height: 100%;
-            --app-primary-color: #1fb6ff;
-            --app-secondary-color: #212121;
-        }
-        
-        body {
-            -webkit-font-smoothing: -webkit-font-smoothing;
-            background: #f9f9f9;
-            color: #212121;
-            font-family: 'Varela Round', sans-serif;
-            height: 100%;
-            line-height: 1.5;
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+          body {
+              -webkit-font-smoothing: -webkit-font-smoothing;
+              background: #f9f9f9;
+              color: #212121;
+              font-family: 'Varela Round', sans-serif;
+              height: 100%;
+              line-height: 1.5;
+              margin: 0;
+              overflow: hidden;
+          }
+      </style>
 
-</head>
+  </head>
 
-<body>
-
-    <hazlo-app></hazlo-app>
-    <overlay-container></overlay-container>
-
-</body>
-
+  <body>
+      <hazlo-app></hazlo-app>
+      <overlay-container></overlay-container>
+  </body>
+  <noscript>
+    <h1>JavaScript is required to use Hazlo!</h1>
+  </noscript>
+   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js', {scope: '/'}).then(function() {
+        console.log("Service Worker Registered");
+      });
+    }
+  </script>
 </html>

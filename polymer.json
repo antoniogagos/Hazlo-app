@@ -2,13 +2,20 @@
   "entrypoint": "index.html",
   "shell": "src/hazlo-app.html",
   "fragments": [
+     "src/hazlo-drawer.html",
+     "src/hazlo-dashboard-page.html"
   ],
   "sources": [
    "src/**/*",
-   "images/**/*"
+   "images/**/*",
+   "bower.json"
   ],
   "extraDependencies": [
     "manifest.json",
-    "bower_components/webcomponentsjs/**"
+    "bower_components/webcomponentsjs/**",
+    "bower_components/overlay-container/overlay-container.html"
+  ],
+  "builds": [
+    { "preset": "es6-unbundled" }
   ]
 }
